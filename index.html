@@ -24,7 +24,7 @@ input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);ba
 </style>
 </head>
 <body>
-<div class="card">
+<div class="card" data-role="masaya">
   <div class="brand">
     <div class="logo">PS</div>
     <div>
@@ -33,7 +33,7 @@ input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);ba
     </div>
   </div>
 
-  <form id="loginForm" autocomplete="on">
+  <form id="loginForm" autocomplete="on" novalidate>
     <div class="form-group">
       <label for="username">Usuario</label>
       <input id="username" name="username" type="text" placeholder="usuario" required />
@@ -47,7 +47,7 @@ input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);ba
       <button type="button" id="demoBtn" class="btn">Usar demo</button>
     </div>
     <div class="muted">¿No tienes cuenta? <a class="link" href="register.html">Regístrate</a></div>
-    <div class="msg" id="msg"></div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
   </form>
 </div>
 
@@ -55,25 +55,42 @@ input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);ba
 const API_BASE = 'https://payless-api.vercel.app';
 const LOGIN_PATH = '/auth/login';
 const STORAGE_AUTH = 'payless_auth_v1';
+const EXPECTED_ROLE = 'masaya';
 
-function showMsg(text, ok){ 
-  const el = document.getElementById('msg'); 
-  el.textContent = text; 
-  el.style.color = ok ? '#9fe6b0' : '#ffb4a2'; 
+function showMsg(text, ok = true){
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.style.color = ok ? '#9fe6b0' : '#ffb4a2';
 }
 
-function setAuthToken(obj){ 
-  localStorage.setItem(STORAGE_AUTH, JSON.stringify(obj)); 
+function setAuthToken(obj){
+  localStorage.setItem(STORAGE_AUTH, JSON.stringify(obj));
+}
+
+function setLoading(state){
+  const btn = document.getElementById('submitBtn');
+  const demo = document.getElementById('demoBtn');
+  btn.disabled = state;
+  demo.disabled = state;
+  btn.classList.toggle('loading', state);
+  demo.classList.toggle('loading', state);
 }
 
 async function apiLogin(username, password){
+  const payload = { username, password, expectedRole: EXPECTED_ROLE };
   const res = await fetch(API_BASE + LOGIN_PATH, {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify(payload)
   });
   const data = await res.json().catch(()=>null);
-  if(!res.ok) throw new Error(data?.message || 'Error ' + res.status);
+
+  if(res.status === 403){
+    throw new Error(data?.message || 'No tienes permiso para iniciar sesión en este panel');
+  }
+  if(!res.ok){
+    throw new Error(data?.message || 'Error ' + res.status);
+  }
   return data;
 }
 
@@ -81,27 +98,35 @@ document.getElementById('loginForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
+
   if(!username || !password){ showMsg('Completa los campos', false); return; }
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.classList.add('loading');
+  setLoading(true);
   showMsg('Conectando...', true);
 
   try{
     const result = await apiLogin(username, password);
-    if(!result.token) throw new Error('Token no recibido');
+    const token = result?.token;
+    const returnedRole = result?.role || result?.user?.role;
 
-    const user = { username };
-    setAuthToken({ token: result.token, user });
+    if(!token) throw new Error('Token no recibido');
+
+    if(EXPECTED_ROLE && returnedRole && returnedRole !== EXPECTED_ROLE && returnedRole !== 'managua' && returnedRole !== 'admin'){
+      showMsg('Tu cuenta no tiene permiso para este panel.', false);
+      return;
+    }
+
+    const user = { username, role: returnedRole || EXPECTED_ROLE };
+    setAuthToken({ token, user });
+
     showMsg('Inicio de sesión correcto. Redirigiendo...', true);
-
-    // Redirigir al panel
     setTimeout(()=> window.location.href='panelMasaya.html', 600);
+
   }catch(err){
     console.error(err);
     showMsg(err.message || 'Error en login', false);
   }finally{
-    btn.disabled = false; btn.classList.remove('loading');
+    setLoading(false);
   }
 });
 
