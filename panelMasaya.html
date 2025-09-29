@@ -4,69 +4,603 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Payless SUC Masaya — CRUD</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --accent:#ff6b35;
-      --muted:#98a0b3;
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --accent: #ff6b35;
+      --accent-hover: #ff8a5b;
+      --muted: #98a0b3;
       --glass: rgba(255,255,255,0.03);
-      --success:#34d399;
-      --danger:#ff6b6b;
+      --success: #34d399;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #e6eef8;
+      --sidebar-width: 300px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      background:linear-gradient(180deg,#071029 0%, #0f1724 100%);color:#e6eef8;
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh;gap:24px;padding:28px;}
-    .sidebar{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:12px;padding:20px;box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-      border:1px solid rgba(255,255,255,0.03);
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #071029 0%, #0f1724 100%);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
     }
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-    .logo{width:44px;height:44px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#071022}
-    .brand h1{font-size:16px;margin:0}
-    .brand p{margin:0;font-size:12px;color:var(--muted)}
-    nav ul{list-style:none;padding:0;margin:14px 0}
-    .muted{color:var(--muted);font-size:13px}
-
-    /* main */
-    main{padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));border:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 20px rgba(2,6,23,0.5)}
-    header.main-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-    .search{display:flex;gap:8px;align-items:center}
-    .search input{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;color:inherit}
-
-    .controls{display:flex;gap:8px;align-items:center}
-    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;cursor:pointer;color:inherit}
-    .btn.primary{background:linear-gradient(90deg,var(--accent),#ff8a5b);color:#071022;border:none}
-    .btn.warn{background:linear-gradient(90deg,#ffd89b,#ffb36b);color:#071022;border:none}
-    .btn.danger{background:linear-gradient(90deg,#ff9b9b,#ff6b6b);color:#071022;border:none}
-
-    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
-    .card{padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
-    .card h3{margin:0;font-size:13px;color:var(--muted)}
-    .card p{margin:8px 0 0;font-size:18px;font-weight:600}
-
-    .panel{display:flex;gap:16px}
-    .left{flex:2}
-    .right{flex:1}
-
-    table{width:100%;border-collapse:collapse;background:transparent}
-    th,td{padding:10px 8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:14px}
-    th{color:var(--muted);font-weight:600}
-    tbody tr:hover{background:rgba(255,255,255,0.01)}
-
-    form.fieldset{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
-    .form-row{display:flex;gap:8px}
-    .form-row input{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-
-    .msg{height:18px;font-size:13px;margin-top:8px;color:var(--muted)}
-
-    @media (max-width:1000px){
-      .app{grid-template-columns:1fr;}
-      .panel{flex-direction:column;}
+    
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      min-height: 100vh;
+      gap: 24px;
+      padding: 24px;
+    }
+    
+    /* Sidebar mejorado */
+    .sidebar {
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(2,6,23,0.8);
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #071022;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+    }
+    
+    .brand-text h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+    
+    .brand-text p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    
+    nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+    }
+    
+    nav li {
+      margin-bottom: 8px;
+    }
+    
+    .nav-section-title {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 16px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .branch-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--glass);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+    
+    .branch-btn:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .branch-name {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .branch-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    
+    .quick-actions {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .section-title {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--glass);
+      color: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .btn:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-2px);
+    }
+    
+    .btn i {
+      font-size: 16px;
+    }
+    
+    /* Main content mejorado */
+    main {
+      padding: 24px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 8px 24px rgba(2,6,23,0.6);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+    
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .header-title h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .header-title .muted {
+      margin-top: 4px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .search {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      position: relative;
+    }
+    
+    .search i {
+      position: absolute;
+      left: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    
+    .search input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 12px 10px 36px;
+      border-radius: 10px;
+      color: inherit;
+      width: 280px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(255,107,53,0.2);
+    }
+    
+    .btn-refresh {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+    
+    .btn-refresh:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    
+    /* Cards mejoradas */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    
+    .card {
+      padding: 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+    }
+    
+    .card h3 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .card p {
+      margin: 8px 0 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    /* Panel principal */
+    .panel {
+      display: flex;
+      gap: 24px;
+    }
+    
+    .left {
+      flex: 2;
+    }
+    
+    .right {
+      flex: 1;
+    }
+    
+    /* Tabla mejorada */
+    .table-container {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.02);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: transparent;
+    }
+    
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 14px;
+    }
+    
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      background: rgba(255,255,255,0.03);
+    }
+    
+    tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    tbody tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+    
+    .stock-low {
+      color: var(--warning);
+      font-weight: 600;
+    }
+    
+    .stock-critical {
+      color: var(--danger);
+      font-weight: 600;
+    }
+    
+    /* Botones de acción en tabla */
+    .btn-action {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .btn-edit {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    
+    .btn-edit:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+    
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .btn-delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Formulario mejorado */
+    .form-container {
+      padding: 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .form-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .form-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .form-row.double {
+      flex-direction: row;
+    }
+    
+    .form-row.double > * {
+      flex: 1;
+    }
+    
+    .form-label {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    
+    .form-input {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
+      color: inherit;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(255,107,53,0.2);
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-primary {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #071022;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      justify-content: center;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255,107,53,0.4);
+    }
+    
+    .btn-secondary {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      justify-content: center;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    
+    .msg {
+      height: 18px;
+      font-size: 13px;
+      margin-top: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .app {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px;
+      }
+      
+      .sidebar {
+        order: 2;
+        margin-top: 0;
+      }
+      
+      .search input {
+        width: 100%;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+      
+      .panel {
+        flex-direction: column;
+      }
+      
+      .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .search {
+        width: 100%;
+      }
+      
+      .form-row.double {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        padding: 20px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .app {
+        padding: 12px;
+      }
+      
+      main, .sidebar {
+        padding: 16px;
+      }
+      
+      .card p {
+        font-size: 24px;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -75,69 +609,105 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="logo">PS</div>
-        <div>
-          <h1>Payless SUC Masaya — Admin</h1>
-          <p class="muted">CRUD — Masaya</p>
+        <div class="brand-text">
+          <h1>Payless SUC Masaya</h1>
+          <p>CRUD — Masaya</p>
         </div>
       </div>
+      
       <nav>
+        <div class="nav-section-title">
+          <i class="fas fa-store"></i>
+          Sucursales
+        </div>
         <ul>
-          <li class="muted">Sucursales</li>
           <li>
             <div class="branch-btn" data-branch="jinotepe" onclick="window.location.href='https://jinotepe.proyect.site/'">
-              <div class="branch-name"><strong>Jinotepe</strong></div>
+              <div class="branch-name">
+                <div class="branch-status"></div>
+                <strong>Jinotepe</strong>
+              </div>
+              <i class="fas fa-chevron-right"></i>
             </div>
           </li>
           <li>
             <div class="branch-btn" data-branch="chontales" onclick="window.location.href='https://chontales.proyect.site/'">
-              <div class="branch-name"><strong>Chontales</strong></div>
+              <div class="branch-name">
+                <div class="branch-status"></div>
+                <strong>Chontales</strong>
+              </div>
+              <i class="fas fa-chevron-right"></i>
             </div>
           </li>
           <li>
             <div class="branch-btn" data-branch="masaya" onclick="window.location.href='https://masaya.proyect.site/'">
-              <div class="branch-name"><strong>Masaya</strong></div>
+              <div class="branch-name">
+                <div class="branch-status"></div>
+                <strong>Masaya</strong>
+              </div>
+              <i class="fas fa-chevron-right"></i>
             </div>
           </li>
         </ul>
       </nav>
-
-      <div style="margin-top:18px">
-        <div class="muted" style="margin-bottom:8px">Acciones rápidas</div>
-        <button class="btn" onclick="downloadAll()">Exportar CSV</button>
-        <button class="btn" style="margin-top:8px" onclick="logout()">Cerrar sesión</button>
-        <div class="msg" id="sideMsg"></div>
+      
+      <div class="quick-actions">
+        <div class="section-title">
+          <i class="fas fa-bolt"></i>
+          Acciones rápidas
+        </div>
+        <button class="btn" onclick="downloadAll()">
+          <i class="fas fa-file-export"></i>
+          Exportar CSV
+        </button>
+        <button class="btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Cerrar sesión
+        </button>
       </div>
     </aside>
 
     <main>
       <header class="main-header">
-        <div>
-          <h2 style="margin:0">Panel administrativo — Masaya</h2>
+        <div class="header-title">
+          <h2>Panel administrativo — Masaya</h2>
           <div class="muted">Gestión completa de productos (CRUD)</div>
         </div>
-
         <div class="controls">
           <div class="search">
+            <i class="fas fa-search"></i>
             <input id="searchInput" placeholder="Buscar por nombre, marca o tamaño" oninput="filterTable()" />
           </div>
-          <button class="btn" onclick="refreshData()">Actualizar</button>
+          <button class="btn-refresh" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i>
+            Actualizar
+          </button>
         </div>
       </header>
 
       <section class="cards">
-        <div class="card"><h3>Productos</h3><p id="countProducts">0</p></div>
-        <div class="card"><h3>Valor total</h3><p id="totalValue">$0.00</p></div>
-        <div class="card"><h3>Stock crítico (≤5)</h3><p id="stockCritical">0</p></div>
+        <div class="card">
+          <h3><i class="fas fa-boxes"></i> Productos</h3>
+          <p id="countProducts">0</p>
+        </div>
+        <div class="card">
+          <h3><i class="fas fa-dollar-sign"></i> Valor total</h3>
+          <p id="totalValue">$0.00</p>
+        </div>
+        <div class="card">
+          <h3><i class="fas fa-exclamation-triangle"></i> Stock crítico (≤5)</h3>
+          <p id="stockCritical">0</p>
+        </div>
       </section>
 
       <section class="panel">
         <div class="left">
           <!-- CRUD Table -->
-          <div style="overflow:auto;border-radius:10px;background:transparent;padding:6px">
+          <div class="table-container">
             <table id="recordsTable">
               <thead>
                 <tr>
-                  <th>Nombre</th>
+                  <th>Producto</th>
                   <th>Marca</th>
                   <th>Tamaño</th>
                   <th>Precio</th>
@@ -152,30 +722,52 @@
 
         <aside class="right">
           <!-- Create / Edit form -->
-          <form id="productForm" class="fieldset">
-            <h3 style="margin:0">Crear / Editar producto</h3>
+          <div class="form-container">
+            <div class="form-header">
+              <h3><i class="fas fa-edit"></i> Crear / Editar producto</h3>
+            </div>
+            
+            <form id="productForm">
+              <div class="form-row">
+                <label class="form-label" for="f_name">Nombre del producto</label>
+                <input class="form-input" id="f_name" placeholder="Ej. Zapatos deportivos" required />
+              </div>
+              
+              <div class="form-row">
+                <label class="form-label" for="f_brand">Marca</label>
+                <input class="form-input" id="f_brand" placeholder="Ej. Nike, Adidas" required />
+              </div>
+              
+              <div class="form-row double">
+                <div>
+                  <label class="form-label" for="f_size">Tamaño</label>
+                  <input class="form-input" id="f_size" placeholder="42" type="number" min="0" required />
+                </div>
+                <div>
+                  <label class="form-label" for="f_price">Precio ($)</label>
+                  <input class="form-input" id="f_price" placeholder="59.99" type="number" step="0.01" min="0" required />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <label class="form-label" for="f_stock">Stock</label>
+                <input class="form-input" id="f_stock" placeholder="50" type="number" min="0" required />
+              </div>
 
-            <div class="form-row">
-              <input id="f_name" placeholder="Nombre" required />
-            </div>
-            <div class="form-row">
-              <input id="f_brand" placeholder="Marca" required />
-            </div>
-            <div class="form-row">
-              <input id="f_size" placeholder="Tamaño (ej. 42)" type="number" min="0" required />
-              <input id="f_price" placeholder="Precio" type="number" step="0.01" min="0" required />
-            </div>
-            <div class="form-row">
-              <input id="f_stock" placeholder="Stock" type="number" min="0" required />
-            </div>
+              <div class="form-actions">
+                <button id="saveBtn" class="btn-primary" type="button">
+                  <i class="fas fa-save"></i>
+                  Guardar
+                </button>
+                <button id="cancelEdit" class="btn-secondary" type="button">
+                  <i class="fas fa-times"></i>
+                  Cancelar
+                </button>
+              </div>
 
-            <div style="display:flex;gap:8px;margin-top:6px">
-              <button id="saveBtn" class="btn primary" type="button">Guardar</button>
-              <button id="cancelEdit" class="btn" type="button">Cancelar</button>
-            </div>
-
-            <div class="msg" id="formMsg"></div>
-          </form>
+              <div class="msg" id="formMsg"></div>
+            </form>
+          </div>
         </aside>
       </section>
     </main>
@@ -204,11 +796,27 @@
       el.textContent = text;
       el.style.color = ok ? 'var(--success)' : 'var(--danger)';
     }
+    
     function showSideMsg(text, ok=true){
-      const el = document.getElementById('sideMsg');
-      el.textContent = text;
-      el.style.color = ok ? 'var(--success)' : 'var(--danger)';
-      setTimeout(()=> el.textContent = '', 4000);
+      // Create a temporary message element if it doesn't exist
+      let msgEl = document.getElementById('sideMsg');
+      if (!msgEl) {
+        msgEl = document.createElement('div');
+        msgEl.id = 'sideMsg';
+        msgEl.style.cssText = 'position:fixed; top:20px; right:20px; padding:12px 16px; border-radius:8px; z-index:1000; font-size:14px;';
+        document.body.appendChild(msgEl);
+      }
+      
+      msgEl.textContent = text;
+      msgEl.style.background = ok ? 'var(--success)' : 'var(--danger)';
+      msgEl.style.color = 'white';
+      msgEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      
+      setTimeout(()=> {
+        msgEl.textContent = '';
+        msgEl.style.background = 'transparent';
+        msgEl.style.boxShadow = 'none';
+      }, 4000);
     }
 
     // fetch wrapper
@@ -260,25 +868,36 @@
       rows.forEach(r=>{
         const id = r.id || r._id || r.docId || r.key || '';
         const tr = document.createElement('tr');
+        
+        // Determine stock class for styling
+        let stockClass = '';
+        if (r.stock <= 5) stockClass = 'stock-critical';
+        else if (r.stock <= 15) stockClass = 'stock-low';
+        
         tr.innerHTML = `
           <td>${escapeHtml(r.name || '')}</td>
           <td>${escapeHtml(r.brand || '')}</td>
           <td>${escapeHtml(String(r.size ?? ''))}</td>
           <td>$${Number(r.price ?? 0).toFixed(2)}</td>
-          <td>${Number(r.stock ?? 0)}</td>
+          <td class="${stockClass}">${Number(r.stock ?? 0)}</td>
           <td>
-            <button class="btn" data-id="${id}">Editar</button>
-            <button class="btn danger" data-id="${id}">Borrar</button>
+            <button class="btn-action btn-edit" data-id="${id}">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button class="btn-action btn-delete" data-id="${id}">
+              <i class="fas fa-trash"></i> Borrar
+            </button>
           </td>
         `;
         tbody.appendChild(tr);
       });
       document.getElementById('countProducts').innerText = rows.length;
+      
       // delegate actions
       tbody.querySelectorAll('button').forEach(btn=>{
         const id = btn.getAttribute('data-id');
-        if(btn.textContent.trim() === 'Editar') btn.addEventListener('click',()=> onEdit(id));
-        if(btn.textContent.trim() === 'Borrar') btn.addEventListener('click',()=> onDelete(id));
+        if(btn.classList.contains('btn-edit')) btn.addEventListener('click',()=> onEdit(id));
+        if(btn.classList.contains('btn-delete')) btn.addEventListener('click',()=> onDelete(id));
       });
     }
 
@@ -294,7 +913,8 @@
       editingId = null;
       document.getElementById('productForm').reset();
       showFormMsg('');
-      document.getElementById('saveBtn').textContent = 'Guardar';
+      document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> Guardar';
+      document.getElementById('saveBtn').disabled = false;
     }
 
     function fillFormWith(record){
@@ -304,7 +924,7 @@
       document.getElementById('f_price').value = record.price ?? '';
       document.getElementById('f_stock').value = record.stock ?? '';
       showFormMsg('');
-      document.getElementById('saveBtn').textContent = 'Actualizar';
+      document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> Actualizar';
     }
 
     // actions
@@ -317,24 +937,34 @@
         price: Number(document.getElementById('f_price').value || 0),
         stock: Number(document.getElementById('f_stock').value || 0)
       };
-      if(!payload.name || !payload.brand){ showFormMsg('Nombre y Marca son obligatorios', false); return; }
+      if(!payload.name || !payload.brand){ 
+        showFormMsg('Nombre y Marca son obligatorios', false); 
+        return; 
+      }
 
       btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+      
       try {
         if(editingId){
           await updateRecord(editingId, payload);
-          showFormMsg('Actualizado correctamente', true);
+          showFormMsg('Producto actualizado correctamente', true);
         } else {
           await createRecord(payload);
-          showFormMsg('Creado correctamente', true);
+          showFormMsg('Producto creado correctamente', true);
         }
         await refreshAndRender();
         resetForm();
       } catch(err){
         console.error('save error', err);
-        showFormMsg(err.message || 'Error al guardar', false);
+        showFormMsg(err.message || 'Error al guardar el producto', false);
       } finally {
         btn.disabled = false;
+        if (editingId) {
+          btn.innerHTML = '<i class="fas fa-save"></i> Actualizar';
+        } else {
+          btn.innerHTML = '<i class="fas fa-save"></i> Guardar';
+        }
       }
     }
 
@@ -344,7 +974,8 @@
       if(rec){
         editingId = id;
         fillFormWith(rec);
-        window.scrollTo({top:0,behavior:'smooth'});
+        // Scroll to form
+        document.querySelector('.form-container').scrollIntoView({behavior: 'smooth', block: 'start'});
         return;
       }
       // fallback refetch
@@ -355,14 +986,14 @@
 
     async function onDelete(id){
       if(!id){ showSideMsg('Id no encontrado', false); return; }
-      if(!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
+      if(!confirm('¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.')) return;
       try {
         await deleteRecord(id);
-        showSideMsg('Eliminado correctamente', true);
+        showSideMsg('Producto eliminado correctamente', true);
         await refreshAndRender();
       } catch(err){
         console.error('delete error', err);
-        showSideMsg(err.message || 'Error al eliminar', false);
+        showSideMsg(err.message || 'Error al eliminar el producto', false);
       }
     }
 
@@ -373,7 +1004,16 @@
       updateCards(rows);
     }
 
-    function refreshData(){ refreshAndRender(); }
+    function refreshData(){ 
+      const refreshBtn = document.querySelector('.btn-refresh');
+      refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando';
+      
+      refreshAndRender().then(() => {
+        setTimeout(() => {
+          refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Actualizar';
+        }, 500);
+      });
+    }
 
     // CSV
     async function downloadAll(){
