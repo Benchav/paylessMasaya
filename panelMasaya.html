@@ -340,13 +340,39 @@
       border: 1px solid rgba(255,255,255,0.05);
       background: rgba(255,255,255,0.02);
     }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: transparent;
+
+    /* === ADICIÓN: wrapper que activa scroll lateral en móvil === */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      max-width: 100%;
+      position: relative; /* para indicadores */
     }
-    
+    .table-scroll table {
+      width: 100%;
+      min-width: 760px; /* ajustar según número de columnas */
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+    .table-scroll::after,
+    .table-scroll::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 36px;
+      pointer-events: none;
+      transition: opacity .25s;
+      opacity: 0;
+      z-index: 5;
+    }
+    .table-scroll::after { right: 0; background: linear-gradient(90deg, rgba(15,23,36,0), rgba(15,23,36,0.6)); }
+    .table-scroll::before { left: 0; background: linear-gradient(270deg, rgba(15,23,36,0), rgba(15,23,36,0.6)); }
+    .table-scroll.has-right::after { opacity: 1; }
+    .table-scroll.has-left::before { opacity: 1; }
+    /* === fin adición === */
+
     th, td {
       padding: 14px 16px;
       text-align: left;
@@ -529,7 +555,7 @@
       text-align: center;
     }
     
-    /* Responsive */
+   /* Responsive */
     @media (max-width: 1200px) {
       .cards {
         grid-template-columns: repeat(2, 1fr);
@@ -601,7 +627,42 @@
       .form-actions {
         flex-direction: column;
       }
+      
+      .table-scroll table { min-width: 620px; } /* ajuste para pantallas muy pequeñas */
     }
+
+    /* === ADICIÓN ÚNICA: reglas para DESKTOP (≥993px) - solo aquí adaptamos la columna derecha === */
+    @media (min-width: 993px) {
+      /* permitir que la columna izquierda se encoja correctamente */
+      .left {
+        flex: 1 1 auto;
+        min-width: 0; /* esencial para que el contenido no obligue al contenedor a crecer y recorte la derecha */
+      }
+      /* ancho fijo razonable para el formulario en desktop (evita que quede recortado) */
+      .right {
+        flex: 0 0 419px;
+        min-width: 0;
+        max-width: 419px;
+      }
+      /* permitir que main no oculte el desbordamiento del formulario en desktop */
+      main {
+        overflow: visible;
+      }
+      /* en desktop la tabla debe intentar adaptarse al espacio disponible y no forzar ancho excesivo */
+      .table-scroll {
+        min-width: 0;
+      }
+      .table-scroll table {
+        min-width: 0;
+        width: 100%;
+        table-layout: fixed; /* evita que la tabla empuje la columna derecha */
+      }
+      .form-container {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+    }
+    /* === fin adaptación desktop === */
   </style>
 </head>
 <body>
@@ -704,19 +765,23 @@
         <div class="left">
           <!-- CRUD Table -->
           <div class="table-container">
-            <table id="recordsTable">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Marca</th>
-                  <th>Tamaño</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <!-- === ADICIÓN: wrapper para habilitar scroll lateral en móvil === -->
+            <div class="table-scroll" tabindex="0" aria-label="Tabla de productos. Desplazable horizontalmente">
+              <table id="recordsTable">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Marca</th>
+                    <th>Tamaño</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <!-- === fin adición === -->
           </div>
         </div>
 
@@ -899,6 +964,11 @@
         if(btn.classList.contains('btn-edit')) btn.addEventListener('click',()=> onEdit(id));
         if(btn.classList.contains('btn-delete')) btn.addEventListener('click',()=> onDelete(id));
       });
+
+      // Actualizar indicadores de scroll si la función existe
+      if (typeof window.updateTableScrollIndicators === 'function') {
+        window.updateTableScrollIndicators();
+      }
     }
 
     function updateCards(rows){
@@ -1042,11 +1112,63 @@
     function escapeHtml(s){ return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
     function escapeCsv(s){ if(s==null) return ''; return `"${String(s).replaceAll('"','""')}"`; }
 
+    // === ADICIÓN: setupTableScroll (solo la función y su inicialización) ===
+    function setupTableScroll() {
+      const scrollEl = document.querySelector('.table-scroll');
+      if(!scrollEl) return;
+
+      function updateScrollIndicators() {
+        const maxScrollLeft = scrollEl.scrollWidth - scrollEl.clientWidth;
+        scrollEl.classList.toggle('has-right', scrollEl.scrollLeft < maxScrollLeft - 1);
+        scrollEl.classList.toggle('has-left', scrollEl.scrollLeft > 1);
+      }
+      // Exponer para poder llamarla desde renderTable
+      window.updateTableScrollIndicators = updateScrollIndicators;
+
+      // Inicial
+      updateScrollIndicators();
+
+      // Listeners
+      scrollEl.addEventListener('scroll', updateScrollIndicators);
+      window.addEventListener('resize', updateScrollIndicators);
+
+      const obs = new MutationObserver(updateScrollIndicators);
+      obs.observe(scrollEl, { childList: true, subtree: true });
+
+      // Drag-to-scroll (mouse); ignore if clicking on interactive elements
+      let isDown = false, startX = 0, scrollLeft = 0;
+      scrollEl.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button, a, input')) return;
+        isDown = true;
+        startX = e.pageX - scrollEl.offsetLeft;
+        scrollLeft = scrollEl.scrollLeft;
+        e.preventDefault();
+      });
+      document.addEventListener('mouseup', () => { isDown = false; });
+      document.addEventListener('mousemove', (e) => {
+        if(!isDown) return;
+        const x = e.pageX - scrollEl.offsetLeft;
+        const walk = (x - startX) * 1;
+        scrollEl.scrollLeft = scrollLeft - walk;
+      });
+
+      // Keyboard navigation (when focused)
+      scrollEl.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight') { scrollEl.scrollBy({left: 150, behavior: 'smooth'}); e.preventDefault(); }
+        if(e.key === 'ArrowLeft')  { scrollEl.scrollBy({left: -150, behavior: 'smooth'}); e.preventDefault(); }
+        if(e.key === 'Home')      { scrollEl.scrollTo({left: 0, behavior: 'smooth'}); e.preventDefault(); }
+        if(e.key === 'End')       { scrollEl.scrollTo({left: scrollEl.scrollWidth, behavior: 'smooth'}); e.preventDefault(); }
+      });
+    }
+    // === fin adición ===
+
     // init
     (function init(){
       // attach handlers (only once)
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
       document.getElementById('cancelEdit').addEventListener('click', resetForm);
+      // inicializar el wrapper de scroll lateral (si existe)
+      setupTableScroll();
       // initial load
       refreshAndRender();
       // expose selectBranch for parity with other pages
