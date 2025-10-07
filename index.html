@@ -367,7 +367,7 @@ input:focus-visible {
       <button id="submitBtn" type="submit" class="btn primary">
         <span>Entrar</span>
       </button>
-      <button type="button" id="demoBtn" class="btn secondary">Usar demo</button>
+    <!--  <button type="button" id="demoBtn" class="btn secondary">Usar demo</button> -->
     </div>
 
     <div class="muted">¿No tienes cuenta? <a class="link" href="register.html">Regístrate aquí</a></div>
@@ -403,11 +403,11 @@ function setAuthToken(obj){
 
 function setLoading(state){
   const btn = document.getElementById('submitBtn');
-  const demo = document.getElementById('demoBtn');
+  //const demo = document.getElementById('demoBtn');
   btn.disabled = state;
-  demo.disabled = state;
+  //demo.disabled = state;
   btn.classList.toggle('loading', state);
-  demo.classList.toggle('loading', state);
+  //demo.classList.toggle('loading', state);
 }
 
 async function apiLogin(username, password){
@@ -481,11 +481,11 @@ document.getElementById('loginForm').addEventListener('submit', async e=>{
   }
 });
 
-document.getElementById('demoBtn').addEventListener('click', ()=>{
-  document.getElementById('username').value='adminmasaya';
-  document.getElementById('password').value='123456';
+//document.getElementById('demoBtn').addEventListener('click', ()=>{
+ // document.getElementById('username').value='adminmasaya';
+ // document.getElementById('password').value='123456';
   document.getElementById('loginForm').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
-});
+//});
 
 /* Password visibility toggle */
 document.getElementById('togglePassword').addEventListener('click', function() {
